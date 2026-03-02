@@ -1,0 +1,25 @@
+{
+  "name": "panaversity-idfa",
+  "owner": {
+    "name": "Panaversity",
+    "email": "info@panaversity.org"
+  },
+  "metadata": {
+    "description": "Intent-Driven Financial Architecture (IDFA) plugin for Claude Code — build financial models that are human-readable, AI-operable, and audit-proof."
+  },
+  "plugins": [
+    {
+      "name": "idfa-financial-architect",
+      "source": ".",
+      "description": "Apply the IDFA methodology to every financial modelling interaction — auto-activates on financial model tasks with four deterministic guardrails: Named Range Priority, LaTeX Verification, Intent Notes, and MCP Dependency.",
+      "version": "1.0.0",
+      "author": {
+        "name": "Panaversity"
+      },
+      "homepage": "https://panaversity.org",
+      "repository": "https://github.com/panaversity/idfa-financial-architect",
+      "license": "Apache-2.0",
+      "keywords": ["finance", "financial-modelling", "IDFA", "named-ranges", "excel", "audit"]
+    }
+  ]
+}
