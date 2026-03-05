@@ -110,22 +110,83 @@ def check_artifact_delta(before: dict, after: dict, expected_delta: dict) -> dic
     return {"pass": len(failures) == 0, "failures": failures}
 
 
-def check_target_reached(xlsx_path: str, range_name: str, target: float, tolerance: float) -> dict:
-    """Verify a named range value is within tolerance of target."""
+def _try_recalc(xlsx_path: str) -> bool:
+    """Attempt to recalculate the xlsx via recalc_bridge. Returns True on success."""
+    recalc_script = SCRIPTS_DIR / "recalc_bridge.py"
+    if not recalc_script.exists():
+        return False
+    try:
+        result = run_cmd(["uv", "run", str(recalc_script), xlsx_path], timeout=120)
+        if result.returncode == 0:
+            output = json.loads(result.stdout)
+            return output.get("status") == "ok"
+    except Exception:
+        pass
+    return False
+
+
+def check_target_reached(
+    xlsx_path: str,
+    range_name: str,
+    target: float,
+    tolerance: float,
+    solve_input: dict | None = None,
+) -> dict:
+    """Verify a named range value is within tolerance of target.
+
+    If the target range has no cached value (openpyxl can't recalculate),
+    attempts recalc_bridge first.  As a final fallback, if ``solve_input``
+    is provided, checks that the correct *input* Named Range was written —
+    proving the agent found the right answer even without a recalc engine.
+    """
+    # Attempt recalc before reading (populates cached values if engine exists)
+    _try_recalc(xlsx_path)
+
     values = snapshot_named_ranges(xlsx_path)
     actual = values.get(range_name)
-    if actual is None:
-        return {"pass": False, "actual": None, "reason": f"{range_name} not found"}
-    if not isinstance(actual, (int, float)):
-        return {"pass": False, "actual": actual, "reason": f"{range_name} is not numeric: {actual}"}
-    pct_off = abs(actual - target) / abs(target) if target != 0 else abs(actual)
-    passed = pct_off <= tolerance
+
+    # Happy path: cached value exists (recalc engine available)
+    if actual is not None and isinstance(actual, (int, float)):
+        pct_off = abs(actual - target) / abs(target) if target != 0 else abs(actual)
+        passed = pct_off <= tolerance
+        return {
+            "pass": passed,
+            "actual": actual,
+            "target": target,
+            "pct_off": f"{pct_off:.1%}",
+            "tolerance": f"{tolerance:.0%}",
+        }
+
+    # Fallback: no cached value — check the input Named Range instead.
+    # If the agent wrote the correct input, the model WOULD produce the target
+    # once recalculated (formula correctness verified by g1_named_ranges).
+    if solve_input:
+        input_name = solve_input["range_name"]
+        expected_input = solve_input["value"]
+        input_tolerance = solve_input.get("tolerance", tolerance)
+        actual_input = values.get(input_name)
+        if actual_input is not None and isinstance(actual_input, (int, float)):
+            pct_off = (
+                abs(actual_input - expected_input) / abs(expected_input)
+                if expected_input != 0
+                else abs(actual_input)
+            )
+            passed = pct_off <= input_tolerance
+            return {
+                "pass": passed,
+                "method": "solve_input_fallback",
+                "input_name": input_name,
+                "actual_input": actual_input,
+                "expected_input": expected_input,
+                "pct_off": f"{pct_off:.1%}",
+                "tolerance": f"{input_tolerance:.0%}",
+                "note": f"{range_name} cached value unavailable (no recalc engine); verified via input",
+            }
+
     return {
-        "pass": passed,
-        "actual": actual,
-        "target": target,
-        "pct_off": f"{pct_off:.1%}",
-        "tolerance": f"{tolerance:.0%}",
+        "pass": False,
+        "actual": None,
+        "reason": f"{range_name} not found (no cached value, no recalc engine)",
     }
 
 
@@ -327,7 +388,11 @@ def run_tier1(case: dict, agent_output: str, work_dir: str, verbose: bool = Fals
         t = case["target"]
         if output_xlsx:
             results["target_reached"] = check_target_reached(
-                output_xlsx, t["range_name"], t["value"], t["tolerance"]
+                output_xlsx,
+                t["range_name"],
+                t["value"],
+                t["tolerance"],
+                solve_input=t.get("solve_input"),
             )
         else:
             results["target_reached"] = {

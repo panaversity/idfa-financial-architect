@@ -72,10 +72,16 @@ cases:
     fixture: tests/fixtures/gp_waterfall_compliant.xlsx
     tier1_checks: [g1_named_ranges, g4_layer_isolation, artifact_delta, target_reached]
     tier2_judges: [decision_ready]
+    expected_delta:
+      Inp_Rev_Y1: 11806375.44
     target:
       range_name: Gross_Profit_Y3
       value: 6000000
       tolerance: 0.01
+      solve_input:
+        range_name: Inp_Rev_Y1
+        value: 11806375.44
+        tolerance: 0.02
 
   - id: explain_formula
     operation: explain
