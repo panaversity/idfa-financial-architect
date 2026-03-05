@@ -6,7 +6,7 @@ description: >-
   and trigger deterministic recalculation. Use alongside the idfa-financial-architect
   methodology skill. Activate when the agent needs to programmatically interact
   with an Excel financial model — reading, writing, auditing, or recalculating.
-license: Apache-2.0
+license: Proprietary
 metadata:
   author: Panaversity
   version: "2.0"
@@ -151,4 +151,4 @@ should inform the user that results may not reflect the latest assumptions.
 ## Attribution
 
 IDFA Operations is part of the IDFA Financial Architect plugin, developed by
-the **Panaversity team** (https://panaversity.org). Published under Apache 2.0.
+the **Panaversity team** (https://panaversity.org). Proprietary — see LICENSE.

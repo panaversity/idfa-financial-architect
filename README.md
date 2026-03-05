@@ -103,8 +103,8 @@ This plugin is taught in **Chapter 18: Intent-Driven Financial Architecture** of
 
 ## License
 
-Apache-2.0 — see [LICENSE](./LICENSE).
+Proprietary — see [LICENSE](./LICENSE). For commercial licensing, contact licensing@panaversity.org.
 
 ## Attribution
 
-The Intent-Driven Financial Architecture (IDFA) is original research developed by the **Panaversity team** (https://panaversity.org). Published under the [agentskills.io](https://agentskills.io) open standard.
+The Intent-Driven Financial Architecture (IDFA) is original research developed by the **Panaversity team** (https://panaversity.org). IDFA is a new financial modeling language that replaces Excel's coordinate-based cell references (A1, B2, etc.) with Named Ranges that read like business rules — making financial models human-readable, AI-operable, and mathematically audit-proof.
