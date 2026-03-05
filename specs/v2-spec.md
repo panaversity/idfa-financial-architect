@@ -199,7 +199,7 @@ description: >-
   and trigger deterministic recalculation. Use alongside the idfa-financial-architect
   methodology skill. Activate when the agent needs to programmatically interact
   with an Excel financial model — reading, writing, auditing, or recalculating.
-license: Apache-2.0
+license: Proprietary
 metadata:
   author: Panaversity
   version: "2.0"
@@ -402,7 +402,7 @@ idfa-financial-architect/
 ├── examples/
 │   └── gp_waterfall.xlsx                   ← Pre-built reference model (NEW)
 ├── README.md                               ← Fixed install commands
-├── LICENSE                                 ← Apache-2.0 (unchanged)
+├── LICENSE                                 ← Proprietary (unchanged)
 └── specs/
     └── v2-spec.md                          ← This file
 ```
@@ -470,7 +470,7 @@ Scripts use PEP 723 inline metadata — `uv run` handles dependency installation
 ## Constraints
 
 - No new runtime dependencies beyond openpyxl + LibreOffice
-- Apache-2.0 license maintained
+- Proprietary license maintained
 - Each SKILL.md remains a single file readable by any agent (not just Claude)
 - Scripts must work standalone (no xlsx skill required) but compose well with it
 - The methodology content (Three Layers, Four Guardrails, Naming Conventions) does NOT change — only fictional function signatures are replaced
