@@ -551,21 +551,22 @@ def run_agent(case: dict, work_dir: str, verbose: bool = False) -> str:
     prompt += f"\n\nWorking directory for any output files: {work_dir}"
 
     log(f"Running agent for {case['id']}...", verbose)
-    result = run_cmd(
+    result = subprocess.run(
         [
             "claude",
             "-p",
             prompt,
             "--allowedTools",
-            "mcp__idfa-ops__*,Write,Read,Bash",
-            "--plugin-dir",
-            str(ROOT),
+            "Bash,Read,Write",
             "--output-format",
             "text",
             "--max-turns",
             str(case.get("max_turns", 20)),
         ],
+        capture_output=True,
+        text=True,
         timeout=600,
+        cwd=str(ROOT),  # so Claude CLI picks up CLAUDE.md from repo root
     )
 
     if result.returncode != 0:

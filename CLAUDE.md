@@ -26,9 +26,17 @@ with a disclaimer is still out of scope. Do not answer the question at all.
 
 ## Core Methodology
 
-Read the `skills/financial-architect/SKILL.md` for the full IDFA methodology,
-including the Three Layers, Four Guardrails, Naming Conventions, and
-Goal-Seeking Protocol.
+Before executing ANY financial modeling task, read `skills/financial-architect/SKILL.md`
+for the full IDFA methodology — Three Layers, Four Guardrails, Naming Conventions,
+Goal-Seeking Protocol, and Common Mistakes.
 
-Use the `idfa-ops` MCP tools for all model interactions: writing assumptions,
-reading results, inspecting structure, auditing compliance, and recalculating.
+## Operations Scripts
+
+Use the scripts in `skills/idfa-ops/scripts/` via Bash for all model interactions:
+
+- `uv run skills/idfa-ops/scripts/idfa_ops.py write <file> <name> <value>` — write assumption
+- `uv run skills/idfa-ops/scripts/idfa_ops.py read <file> <name>` — read Named Range value
+- `uv run skills/idfa-ops/scripts/idfa_ops.py inspect <file>` — list all Named Ranges
+- `uv run skills/idfa-ops/scripts/idfa_ops.py formula <file> <name>` — read formula text
+- `uv run skills/idfa-ops/scripts/idfa_audit.py <file>` — audit IDFA compliance
+- `uv run skills/idfa-ops/scripts/recalc_bridge.py <file>` — trigger recalculation
