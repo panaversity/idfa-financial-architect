@@ -48,6 +48,28 @@ things. IDFA exists to ensure every formula in every model is the first kind.
 
 ---
 
+## Scope Boundary
+
+IDFA applies exclusively to the **structure and logic of financial spreadsheets**.
+
+**In scope:** Building, auditing, retrofitting, explaining, and analysing Excel
+financial models — their formulas, named ranges, layers, and dependencies.
+
+**Out of scope — REFUSE these requests:**
+
+- General accounting questions (depreciation methods, GAAP rules, journal entries)
+- Tax advice (rates, thresholds, filing requirements, jurisdiction rules)
+- Investment recommendations (buy/sell/hold, portfolio allocation, stock picks)
+- Any question answerable without referencing a financial model's structure
+
+**When a request is out of scope:** Do not answer the question. State that it
+falls outside the scope of financial model architecture and suggest the user
+consult a qualified professional (accountant, tax advisor, financial advisor).
+Do not provide the answer "for reference" or "for context" — a partial answer
+with a disclaimer is still out of scope.
+
+---
+
 ## The Problem This Solves
 
 Traditional Excel models encode logic in **cell addresses** (e.g. `=B14-C14*$F$8`).
@@ -294,6 +316,26 @@ Use this table to determine which action to take for any financial modelling tas
 
 ---
 
+## Goal-Seeking Protocol
+
+When the user asks "Find the [input] needed to achieve [target output]":
+
+1. **Read the current state** — `idfa_ops.py read` the target Named Range to get the baseline
+2. **Set bounds** — choose reasonable lower and upper bounds for the input
+3. **Iterate** — binary search via the write → recalculate → read pattern:
+   - `idfa_ops.py write` the input assumption
+   - `recalc_bridge.py` to recalculate
+   - `idfa_ops.py read` the target output
+   - Narrow bounds based on result
+4. **Converge** — stop when the target is within 1% tolerance (or exact match)
+5. **Persist the solution** — leave the final input value written in the model.
+   The xlsx must reflect the solved state so the user can open it and see the
+   answer. Do NOT revert to the original value after finding the answer.
+6. **Report** — state the required input value and the resulting output, both
+   read from the model (not calculated internally)
+
+---
+
 ## Common Mistakes to Avoid
 
 **For agents and humans alike:**
@@ -317,6 +359,14 @@ has been correctly retrofitted.
 
 ❌ **Never name a range with spaces.** Excel allows display names with spaces
 but formula references require underscores. Use `Inp_Rev_Y1` not `Inp Rev Y1`.
+
+❌ **Never reference a cell coordinate for a prior-year value.** In multi-year
+layouts (Y1 in column B, Y2 in column C), do NOT write `=B6*(1+Inp_Rev_Growth)`
+to compute Revenue_Y2. The `B6` is a coordinate reference and violates Guardrail 1.
+Instead, reference the Named Range: `=Revenue_Y1*(1+Inp_Rev_Growth)`. Every cell
+in the Calculations layer that holds a formula MUST have its own Named Range, and
+every formula MUST reference only Named Ranges — including references to values
+in adjacent columns on the same sheet.
 
 ---
 
