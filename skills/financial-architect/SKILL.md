@@ -13,7 +13,7 @@ description: >-
   confusion about how a financial model works. Do NOT activate for general
   accounting questions, tax advice, investment recommendations, or tasks
   unrelated to the structure and logic of financial spreadsheets.
-license: Apache-2.0
+license: Proprietary
 metadata:
   author: Panaversity
   research-lead: Zia Khan
@@ -423,10 +423,10 @@ Factory methodology. IDFA is Panaversity's contribution to the problem of
 AI-readable financial modelling — applying the principles of spec-driven,
 logic-first design to the Office of the CFO.
 
-This skill is published under the Apache 2.0 licence and follows the Agent
-Skills open standard (https://agentskills.io). It is designed to work
-identically across any skills-compatible agent — Claude, GitHub Copilot,
-OpenAI Codex, Gemini CLI, Cursor, VS Code, and others.
+This skill is proprietary to Panaversity. For commercial licensing, contact
+licensing@panaversity.org. It is designed to work across any skills-compatible
+agent — Claude, GitHub Copilot, OpenAI Codex, Gemini CLI, Cursor, VS Code,
+and others.
 
 For deeper reference material on IDFA — including enterprise governance
 standards, the Model Registry specification, the Validation Protocol, and

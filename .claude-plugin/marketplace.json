@@ -11,14 +11,14 @@
     {
       "name": "idfa-financial-architect",
       "source": ".",
-      "description": "Apply the IDFA methodology to every financial modelling interaction — auto-activates on financial model tasks with four deterministic guardrails: Named Range Priority, LaTeX Verification, Intent Notes, and MCP Dependency.",
+      "description": "Apply the IDFA methodology to every financial modelling interaction — auto-activates on financial model tasks with four deterministic guardrails: Named Range Priority, LaTeX Verification, Intent Notes, and Delegated Calculation.",
       "version": "2.0.0",
       "author": {
         "name": "Panaversity"
       },
       "homepage": "https://panaversity.org",
       "repository": "https://github.com/panaversity/idfa-financial-architect",
-      "license": "Apache-2.0",
+      "license": "Proprietary",
       "keywords": [
         "finance",
         "financial-modelling",

@@ -253,4 +253,4 @@ from different contexts may otherwise collide.
 ---
 
 _IDFA Reference Guide v1.0 — Panaversity (https://panaversity.org)_
-_Published under Apache 2.0 licence_
+_Proprietary — Panaversity. See LICENSE._
