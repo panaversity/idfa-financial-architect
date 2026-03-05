@@ -126,6 +126,7 @@ in coordinate form but immediately obvious in LaTeX.
 $$WACC = \frac{E}{E+D} \times K_e + \frac{D}{E+D} \times K_d \times (1-T)$$
 
 **Three things LaTeX makes verifiable:**
+
 1. Equity weight + Debt weight must equal 1.0
 2. Only the debt term is multiplied by `(1 - Tax Rate)`
 3. Cost of equity and cost of debt must be in the same units (both % or both decimal)
@@ -139,6 +140,7 @@ before writing to any cell. Document discrepancies before proceeding.
 Note/Comment documenting the Intent Statement used to generate it.
 
 **Intent Note format:**
+
 ```
 INTENT:      [Plain-English rule this formula encodes]
 FORMULA:     [LaTeX expression verified before writing]
@@ -152,36 +154,35 @@ designed to calculate. It survives model updates, staff turnover, and layout
 changes. When a formula and its Intent Note diverge, that divergence is visible
 — and that visibility is the audit trail.
 
-### Guardrail 4 — MCP Dependency
+### Guardrail 4 — Delegated Calculation
 
 **Rule:** An AI agent operating on an IDFA-compliant model is prohibited from
-performing calculations internally. It must use the Excel MCP Server to write
-inputs and read results.
+performing calculations internally. It must delegate all arithmetic to the
+spreadsheet engine — writing assumptions, triggering recalculation, and reading
+back results.
 
 **The workflow:**
+
 ```
 Agent reasons: "The correct value for Inp_COGS_Pct_Y2 is 59%"
          ↓
-write_cell("Inp_COGS_Pct_Y2", 0.59)      ← agent writes assumption
+Agent writes assumption to the model (Named Range Inp_COGS_Pct_Y2 = 0.59)
          ↓
-Excel calculates deterministically
+Spreadsheet engine recalculates deterministically
          ↓
-read_cell("Gross_Profit_Y2") → $4,510,000 ← agent reads result
+Agent reads result from model (Named Range Gross_Profit_Y2 → $4,510,000)
          ↓
 Agent reports: "Year 2 Gross Profit is $4,510,000"
 ```
 
-**Why:** This separation ensures the agent provides the reasoning while Excel
-provides the mathematics. The result is not the agent's estimate — it is the
-model's deterministic output. These are categorically different in finance.
+**Why:** This separation ensures the agent provides the reasoning while the
+spreadsheet engine provides the mathematics. The result is not the agent's
+estimate — it is the model's deterministic output. These are categorically
+different in finance.
 
-**Excel MCP Server core tools:**
-| Tool | Purpose |
-|------|---------|
-| `write_cell(name, value)` | Set a Named Range assumption |
-| `read_cell(name)` | Read a Named Range result |
-| `inspect_model()` | List all Named Ranges, values, and dependencies |
-| `read_formula(name)` | Return the formula assigned to a Named Range |
+**Implementation:** The companion `idfa-ops` skill provides scripts for all
+model interactions — writing assumptions, reading results, inspecting model
+structure, and auditing compliance. See `idfa-ops` skill documentation.
 
 ---
 
@@ -189,15 +190,16 @@ model's deterministic output. These are categorically different in finance.
 
 Consistent names are what make models readable across teams and tools.
 
-| Category | Prefix | Example |
-|----------|--------|---------|
-| Input assumptions | `Inp_` | `Inp_Rev_Y1`, `Inp_COGS_Pct_Y1`, `Inp_Rev_Growth` |
-| Annual calculations | `Variable_Yn` | `Revenue_Y1`, `COGS_Y2`, `Gross_Profit_Y3` |
-| Multi-period aggregates | `Variable_Total` | `Revenue_Total`, `EBITDA_Total` |
-| Ratios and margins | `Variable_Pct` | `Gross_Margin_Pct_Y2`, `EBITDA_Margin_Pct` |
-| Counts and units | `Variable_Units` | `Headcount_Y1`, `Units_Sold_Y2` |
+| Category                | Prefix           | Example                                           |
+| ----------------------- | ---------------- | ------------------------------------------------- |
+| Input assumptions       | `Inp_`           | `Inp_Rev_Y1`, `Inp_COGS_Pct_Y1`, `Inp_Rev_Growth` |
+| Annual calculations     | `Variable_Yn`    | `Revenue_Y1`, `COGS_Y2`, `Gross_Profit_Y3`        |
+| Multi-period aggregates | `Variable_Total` | `Revenue_Total`, `EBITDA_Total`                   |
+| Ratios and margins      | `Variable_Pct`   | `Gross_Margin_Pct_Y2`, `EBITDA_Margin_Pct`        |
+| Counts and units        | `Variable_Units` | `Headcount_Y1`, `Units_Sold_Y2`                   |
 
 **Rules:**
+
 - Use underscores only — no spaces, no hyphens
 - Include the dimension (year, quarter, period) in every periodic variable
 - Prefix assumptions with `Inp_` so any reader can distinguish inputs from calculations at a glance
@@ -208,17 +210,18 @@ Consistent names are what make models readable across teams and tools.
 ## Worked Example — 3-Year Gross Profit Waterfall
 
 **Intent Statement:**
+
 > "Project a 3-year GP Waterfall. Year 1 Revenue is $10M, growing 10% YoY.
 > COGS starts at 60% of Revenue but improves by 1% each year due to scale."
 
 ### Step 1 — Extract and name every input
 
-| Input | Named Range | Value |
-|-------|------------|-------|
-| Year 1 Revenue | `Inp_Rev_Y1` | 10,000,000 |
-| Revenue growth rate | `Inp_Rev_Growth` | 0.10 |
-| Year 1 COGS % | `Inp_COGS_Pct_Y1` | 0.60 |
-| Annual efficiency gain | `Inp_COGS_Efficiency` | 0.01 |
+| Input                  | Named Range           | Value      |
+| ---------------------- | --------------------- | ---------- |
+| Year 1 Revenue         | `Inp_Rev_Y1`          | 10,000,000 |
+| Revenue growth rate    | `Inp_Rev_Growth`      | 0.10       |
+| Year 1 COGS %          | `Inp_COGS_Pct_Y1`     | 0.60       |
+| Annual efficiency gain | `Inp_COGS_Efficiency` | 0.01       |
 
 ### Step 2 — Write all calculations using Named Ranges only
 
@@ -250,25 +253,28 @@ Gross Profit: $GP_n = R_n - COGS_n$ ✓
 
 ### Step 4 — Output
 
-| Item | Year 1 | Year 2 | Year 3 |
-|------|--------|--------|--------|
-| Revenue | $10,000,000 | $11,000,000 | $12,100,000 |
-| COGS % | 60.0% | 59.0% | 58.0% |
-| COGS ($) | $6,000,000 | $6,490,000 | $7,018,000 |
+| Item             | Year 1         | Year 2         | Year 3         |
+| ---------------- | -------------- | -------------- | -------------- |
+| Revenue          | $10,000,000    | $11,000,000    | $12,100,000    |
+| COGS %           | 60.0%          | 59.0%          | 58.0%          |
+| COGS ($)         | $6,000,000     | $6,490,000     | $7,018,000     |
 | **Gross Profit** | **$4,000,000** | **$4,510,000** | **$5,082,000** |
 
-### What-If via MCP
+### What-If Analysis
 
-User asks: *"What if Year 1 Revenue is $12M?"*
+User asks: _"What if Year 1 Revenue is $12M?"_
 
-```python
-write_cell("Inp_Rev_Y1", 12000000)
-read_cell("Gross_Profit_Y1")  # → $4,800,000
-read_cell("Gross_Profit_Y2")  # → $5,412,000
-read_cell("Gross_Profit_Y3")  # → $6,098,400
-```
+The agent updates Inp_Rev_Y1 to 12,000,000 in the model, triggers
+recalculation, and reads back:
 
-The agent does not calculate these numbers. Excel does.
+| Output          | Value      |
+| --------------- | ---------- |
+| Gross_Profit_Y1 | $4,800,000 |
+| Gross_Profit_Y2 | $5,412,000 |
+| Gross_Profit_Y3 | $6,098,400 |
+
+The agent does not calculate these numbers. The spreadsheet engine does.
+The `idfa-ops` companion skill handles the write → recalculate → read sequence.
 
 ---
 
@@ -276,15 +282,15 @@ The agent does not calculate these numbers. Excel does.
 
 Use this table to determine which action to take for any financial modelling task.
 
-| Task | Action |
-|------|--------|
-| Building a new model | Extract inputs → name them with `Inp_` → write calculations in Named Range notation → LaTeX-verify complex formulas → attach Intent Notes |
-| Auditing an existing model | `inspect_model()` → check every Calculation layer formula for coordinate references → flag violations → report compliance percentage |
-| Retrofitting a legacy model | `inspect_model()` → identify all hardcoded values → propose Named Ranges → rewrite formulas one by one → validate outputs match original |
-| What-if analysis | `write_cell()` for each assumption change → `read_cell()` for each affected output → report results without internal calculation |
-| Goal-seeking | Iterate `write_cell()` on the target assumption → `read_cell()` to check output → continue until target reached → report the required input value |
-| Explaining a formula | `read_formula(name)` → state the business rule in plain English → check for Intent Note → if missing, add one |
-| Checking compliance | `inspect_model()` → verify: (1) all calculations use Named Ranges, (2) complex formulas have LaTeX verification notes, (3) AI-generated formulas have Intent Notes, (4) no internal calculation was performed |
+| Task                        | Action                                                                                                                                                                                                                         |
+| --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Building a new model        | Extract inputs → name them with `Inp_` → write calculations in Named Range notation → LaTeX-verify complex formulas → attach Intent Notes                                                                                      |
+| Auditing an existing model  | Inspect the model (via `idfa-ops`) → check every Calculation layer formula for coordinate references → flag violations → report compliance percentage                                                                          |
+| Retrofitting a legacy model | Inspect the model (via `idfa-ops`) → identify all hardcoded values → propose Named Ranges → rewrite formulas one by one → validate outputs match original                                                                      |
+| What-if analysis            | Write assumption → recalculate → read result (via `idfa-ops`) for each change → report results without internal calculation                                                                                                    |
+| Goal-seeking                | Write → recalculate → read, iterate until target reached (via `idfa-ops`) → report the required input value                                                                                                                    |
+| Explaining a formula        | Read the formula for the Named Range (via `idfa-ops`) → state the business rule in plain English → check for Intent Note → if missing, add one                                                                                 |
+| Checking compliance         | Inspect the model (via `idfa-ops`) → verify: (1) all calculations use Named Ranges, (2) complex formulas have LaTeX verification notes, (3) AI-generated formulas have Intent Notes, (4) no internal calculation was performed |
 
 ---
 
@@ -297,9 +303,9 @@ a hardcoded number (e.g. `= Revenue_Y1 * 0.60`) violates Layer isolation.
 Move `0.60` to the Assumptions layer as `Inp_COGS_Pct_Y1`.
 
 ❌ **Never calculate internally, then write the result.** If asked "what is
-Year 3 Gross Profit?", do not compute it and report it. Use `read_cell()`.
-Internal calculation and deterministic model calculation can produce different
-results. Only the model result is audit-valid.
+Year 3 Gross Profit?", do not compute it and report it. Read the result from
+the model via the `idfa-ops` skill. Internal calculation and deterministic model
+calculation can produce different results. Only the model result is audit-valid.
 
 ❌ **Never skip LaTeX verification for WACC, IRR, NPV, or DCF terminal value.**
 These are the four formulas where errors are most common and most consequential.
@@ -316,16 +322,16 @@ but formula references require underscores. Use `Inp_Rev_Y1` not `Inp Rev Y1`.
 
 ## Trigger Phrases and Their Correct IDFA Response
 
-| What the user says | What the agent does |
-|---------------------|---------------------|
-| "Explain how this model works" | `inspect_model()` → produce a Logic Map in Named Range notation → explain each business rule |
-| "This model is a black box" | Offer to produce a full Logic Map via `inspect_model()` → identify all inputs and their dependencies |
-| "I inherited this model" | Offer to audit for IDFA compliance → identify coordinate-reference violations → propose retrofitting sequence |
-| "What if [assumption] changes?" | `write_cell()` → `read_cell()` → report deterministic result |
-| "Find the [input] needed to achieve [output]" | Goal-seek via MCP iteration |
-| "Check this formula" | `read_formula()` → LaTeX-verify → check Intent Note → report compliance |
-| "Add [new line item] to the model" | Extract Named Range for new input → write calculation formula using Named Ranges → LaTeX-verify → attach Intent Note |
-| "Run scenarios" | Define Named Ranges for scenario assumptions → iterate via MCP → collect results → report distribution |
+| What the user says                            | What the agent does                                                                                                                        |
+| --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| "Explain how this model works"                | Inspect the model (via `idfa-ops`) → produce a Logic Map in Named Range notation → explain each business rule                              |
+| "This model is a black box"                   | Offer to produce a full Logic Map by inspecting the model (via `idfa-ops`) → identify all inputs and their dependencies                    |
+| "I inherited this model"                      | Offer to audit for IDFA compliance → identify coordinate-reference violations → propose retrofitting sequence                              |
+| "What if [assumption] changes?"               | Write assumption → recalculate → read result (via `idfa-ops`) → report deterministic result                                                |
+| "Find the [input] needed to achieve [output]" | Goal-seek by iterating write → recalculate → read (via `idfa-ops`) until target reached                                                    |
+| "Check this formula"                          | Read the formula (via `idfa-ops`) → LaTeX-verify → check Intent Note → report compliance                                                   |
+| "Add [new line item] to the model"            | Extract Named Range for new input → write calculation formula using Named Ranges → LaTeX-verify → attach Intent Note                       |
+| "Run scenarios"                               | Define Named Ranges for scenario assumptions → iterate write → recalculate → read (via `idfa-ops`) → collect results → report distribution |
 
 ---
 

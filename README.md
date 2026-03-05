@@ -15,14 +15,14 @@ Add the marketplace and install the plugin:
 /plugin install idfa-financial-architect@panaversity-idfa
 ```
 
-The skill auto-activates whenever a conversation mentions financial models, named ranges, spreadsheet formulas, or model audits.
+The plugin ships two skills: **financial-architect** (IDFA methodology — auto-activates on financial model conversations) and **idfa-ops** (programmatic model interaction — Named Range CRUD, compliance auditing, recalculation).
 
 ### Cowork (Claude.ai)
 
-1. Open the **Cowork** tab in Claude
-2. Click **Customize** in the left sidebar
-3. Click **Browse plugins** or upload this plugin directly
-4. The IDFA skill will be available in all Cowork sessions
+1. In the Cowork sidebar, click **Customize** → **Browse plugins** → **Personal**
+2. Click **+**, then select **Add marketplace from GitHub**
+3. Enter: `https://github.com/panaversity/idfa-financial-architect`
+4. Find **IDFA Financial Architect** → click **Install**
 
 ### Local Testing
 
@@ -53,7 +53,7 @@ When the plugin is active, the agent automatically applies four deterministic gu
 1. **Named Range Priority** — every formula uses Named Ranges, zero coordinate references
 2. **LaTeX Verification** — complex formulas (WACC, NPV, DCF, IRR) are verified in LaTeX before writing
 3. **Audit-Ready Intent Notes** — every AI-generated formula includes an Intent Note documenting its purpose
-4. **MCP Dependency** — the agent writes inputs and reads results via the Excel MCP Server, never calculating internally
+4. **Delegated Calculation** — the agent writes inputs and reads results via the spreadsheet engine, never calculating internally
 
 ## The Three Layers
 
@@ -63,18 +63,36 @@ Every IDFA-compliant model separates:
 - **Layer 2 — Calculations**: Named Ranges only, readable as business rules
 - **Layer 3 — Output**: presentation and formatting only
 
+## Prerequisites
+
+| Dependency                       | Required         | Purpose                              |
+| -------------------------------- | ---------------- | ------------------------------------ |
+| Python 3.10+                     | Yes              | Script runtime for `idfa-ops`        |
+| [uv](https://docs.astral.sh/uv/) | Yes              | PEP 723 inline dependency resolution |
+| LibreOffice                      | Yes (for recalc) | Deterministic formula evaluation     |
+
+This plugin works best alongside Anthropic's `xlsx` skill for deterministic formula recalculation.
+
 ## Plugin Structure
 
 ```
 idfa-financial-architect/
 ├── .claude-plugin/
-│   ├── plugin.json            ← Plugin metadata
-│   └── marketplace.json       ← Marketplace catalog (for /plugin marketplace add)
+│   ├── plugin.json                         ← Plugin metadata (v2.0.0)
+│   └── marketplace.json                    ← Marketplace catalog
 ├── skills/
-│   └── financial-architect/
-│       ├── SKILL.md           ← Complete IDFA methodology
-│       └── references/
-│           └── IDFA-reference.md  ← Enterprise governance, complex formulas
+│   ├── financial-architect/                ← IDFA methodology
+│   │   ├── SKILL.md                        ← Four Guardrails, Three Layers, Naming
+│   │   └── references/
+│   │       └── IDFA-reference.md           ← Enterprise governance, complex formulas
+│   └── idfa-ops/                           ← Execution engine
+│       ├── SKILL.md                        ← Operations guide + script reference
+│       └── scripts/
+│           ├── idfa_ops.py                 ← Named Range CRUD (openpyxl, PEP 723)
+│           ├── idfa_audit.py               ← Compliance auditor (openpyxl, PEP 723)
+│           └── recalc_bridge.py            ← LibreOffice recalc bridge (PEP 723)
+├── examples/
+│   └── gp_waterfall.xlsx                   ← Reference model
 ├── README.md
 └── LICENSE
 ```
