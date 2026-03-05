@@ -312,6 +312,7 @@ Use this table to determine which action to take for any financial modelling tas
 | What-if analysis            | Write assumption → recalculate → read result (via `idfa-ops`) for each change → report results without internal calculation                                                                                                    |
 | Goal-seeking                | Write → recalculate → read, iterate until target reached (via `idfa-ops`) → report the required input value                                                                                                                    |
 | Explaining a formula        | Read the formula for the Named Range (via `idfa-ops`) → state the business rule in plain English → check for Intent Note → if missing, add one                                                                                 |
+| Stochastic simulation       | Identify uncertain inputs → define distributions with user → iterate N times via write → recalculate → read (via `idfa-ops`) → analyse distribution → restore model to base case                                               |
 | Checking compliance         | Inspect the model (via `idfa-ops`) → verify: (1) all calculations use Named Ranges, (2) complex formulas have LaTeX verification notes, (3) AI-generated formulas have Intent Notes, (4) no internal calculation was performed |
 
 ---
@@ -333,6 +334,33 @@ When the user asks "Find the [input] needed to achieve [target output]":
    answer. Do NOT revert to the original value after finding the answer.
 6. **Report** — state the required input value and the resulting output, both
    read from the model (not calculated internally)
+
+---
+
+## Stochastic Simulation Protocol (Monte Carlo)
+
+When the user asks "What is the range of outcomes?" or "How likely is [target]?":
+
+1. **Identify the uncertain inputs** — which assumptions have a range rather than
+   a point estimate? (e.g., revenue growth could be 5-15% instead of exactly 10%)
+2. **Define distributions** — for each uncertain input, agree with the user on a
+   distribution (uniform, normal, triangular) and its parameters
+3. **Iterate N times** (default N=1000, adjustable):
+   - Sample each uncertain input from its distribution
+   - `idfa_ops.py write` each sampled value to the model
+   - `recalc_bridge.py` to recalculate
+   - `idfa_ops.py read` the target output
+   - Record the result
+4. **Analyse the distribution** — compute mean, median, P10, P50, P90, standard
+   deviation, and the probability of exceeding or falling below a threshold
+5. **Restore the model** — write the original assumption values back after
+   simulation so the model reflects the base case, not the last random sample
+6. **Report** — present the distribution summary, a histogram if possible, and
+   the probability of the user's target scenario
+
+**Key constraint:** Each iteration MUST delegate to the spreadsheet engine. Do NOT
+build an internal simulation model — the whole point is that the Excel formulas
+define the business logic, and Monte Carlo samples from their input space.
 
 ---
 

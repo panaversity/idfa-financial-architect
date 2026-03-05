@@ -11,8 +11,8 @@ cases:
       Every formula cell MUST have an Intent Note comment (INTENT, FORMULA, ASSUMPTIONS).
       Save the output xlsx file.
     fixture: null
-    tier1_checks: [g1_named_ranges, g3_intent_notes, g4_layer_isolation, layer_separation]
-    tier2_judges: [decision_ready, handover_safe]
+    tier1_checks: [g1_named_ranges, g2_latex_verification, g3_intent_notes, g4_layer_isolation, layer_separation]
+    tier2_judges: [decision_ready, handover_safe, delegated_calc]
 
   - id: audit_compliant
     operation: audit
@@ -46,7 +46,7 @@ cases:
       maintain it. Fix all violations and save the updated xlsx.
     fixture: tests/fixtures/gp_waterfall_violations.xlsx
     tier1_checks: [g1_named_ranges, g3_intent_notes, g4_layer_isolation, layer_separation]
-    tier2_judges: [decision_ready, handover_safe]
+    tier2_judges: [decision_ready, handover_safe, delegated_calc]
     expected_before_audit: FAIL
     expected_after_audit: PASS
 
@@ -59,7 +59,7 @@ cases:
       change if they didn't hold.
     fixture: tests/fixtures/gp_waterfall_compliant.xlsx
     tier1_checks: [g1_named_ranges, g4_layer_isolation, artifact_delta]
-    tier2_judges: [decision_ready, risk_awareness]
+    tier2_judges: [decision_ready, risk_awareness, delegated_calc]
     expected_delta:
       Inp_Rev_Y1: 12000000
 
@@ -72,7 +72,7 @@ cases:
       Apply your answer to the model and save the updated xlsx.
     fixture: tests/fixtures/gp_waterfall_compliant.xlsx
     tier1_checks: [g1_named_ranges, g4_layer_isolation, artifact_delta, target_reached]
-    tier2_judges: [decision_ready]
+    tier2_judges: [decision_ready, delegated_calc]
     expected_delta:
       Inp_Rev_Y1: 11806375.44
     target:
@@ -83,6 +83,20 @@ cases:
         range_name: Inp_Rev_Y1
         value: 11806375.44
         tolerance: 0.02
+
+  - id: montecarlo_gp
+    operation: montecarlo
+    max_turns: 40
+    prompt: >
+      What is the range of Year 3 Gross Profit outcomes if Year 1 Revenue
+      could be anywhere from $8M to $12M (uniform distribution) and
+      Revenue Growth Rate could be 5% to 15% (uniform)?
+      Run 20 iterations through the model using write-recalculate-read.
+      Report the min, max, mean, and P10/P90 of Gross Profit Year 3.
+      Restore the model to its original assumptions when done.
+    fixture: tests/fixtures/gp_waterfall_compliant.xlsx
+    tier1_checks: [g1_named_ranges, g4_layer_isolation]
+    tier2_judges: [decision_ready, delegated_calc]
 
   - id: explain_formula
     operation: explain
