@@ -288,6 +288,42 @@ def check_audit_claims(
     return {"pass": len(failures) == 0, "failures": failures}
 
 
+def check_latex_verification(agent_output: str) -> dict:
+    """Verify the agent performed LaTeX verification before writing formulas.
+
+    White paper Spec 3 (Mathematical Rigor): The agent must 'think' in LaTeX
+    before rendering in Excel. We check for LaTeX markers in the agent output.
+    """
+    import re
+
+    latex_markers = [
+        r"\$\$",  # display math
+        r"\$[^$]+\$",  # inline math
+        r"\\frac",
+        r"\\times",
+        r"\\sum",
+        r"\\text",
+        r"R_n\b",  # subscript notation
+        r"GP_n\b",
+        r"LaTeX",
+        r"latex",
+        r"\\varepsilon",
+    ]
+    found = []
+    for marker in latex_markers:
+        if re.search(marker, agent_output):
+            found.append(marker)
+
+    passed = len(found) >= 1
+    return {
+        "pass": passed,
+        "markers_found": found,
+        "reason": "Agent showed LaTeX verification"
+        if passed
+        else "No LaTeX verification found in agent output",
+    }
+
+
 def run_tier1(case: dict, agent_output: str, work_dir: str, verbose: bool = False) -> dict:
     """Execute all Tier 1 checks for a case. Returns dict of check_name -> result."""
     results = {}
@@ -405,6 +441,11 @@ def run_tier1(case: dict, agent_output: str, work_dir: str, verbose: bool = Fals
     # Layer separation
     if "layer_separation" in checks and output_xlsx:
         results["layer_separation"] = check_layer_separation(output_xlsx)
+
+    # LaTeX verification (White Paper Spec 3)
+    if "g2_latex_verification" in checks:
+        results["g2_latex_verification"] = check_latex_verification(agent_output)
+        log(f"LaTeX verification: {results['g2_latex_verification']}", verbose)
 
     # Row insertion robustness
     if "row_insertion" in checks:
