@@ -65,6 +65,7 @@ cases:
 
   - id: goalseeking_gp
     operation: goalseeking
+    max_turns: 40
     prompt: >
       What Year 1 Revenue would produce a Year 3 Gross Profit of $6,000,000?
       Don't guess — iterate through the model using write-recalculate-read.

@@ -563,7 +563,7 @@ def run_agent(case: dict, work_dir: str, verbose: bool = False) -> str:
             "--output-format",
             "text",
             "--max-turns",
-            "20",
+            str(case.get("max_turns", 20)),
         ],
         timeout=600,
     )
